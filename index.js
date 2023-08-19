@@ -206,35 +206,127 @@ const data = {
 const numberOfDirectors = data.DataProvider.global.positions.filter(
   (position) => position.type === "DIRECTOR"
 ).length;
-console.log(numberOfDirectors);
 // 2. Write a JS expression that returns the number of SHAREHOLDERS.
 const numberOfShareholders = data.DataProvider.global.positions.filter(
   (position) => position.type === "SHAREHOLDER"
 ).length;
-console.log(numberOfShareholders);
 // 3. Write a JS expression that lists the full names of all position holders.
-const positionholderNames = data.DataProvider.global.positions.map(position => position.profile.name);
-console.log(positionholderNames);
+const positionholderNames = data.DataProvider.global.positions.map(
+  (position) => position.profile.name
+);
 // 4A. Is Product B hardware or software?
 
+const productCategory = data.DataProvider.products
+  .filter((product) => product.name === "Product B")
+  .map((category) => category.category);
+
 // 4B. Does Product A have a price of “100”?
+const productPrice = data.DataProvider.products
+  .filter((product) => product.name === "Product A")
+  .some((product) => product.price === 100);
 
 // 4C. Is the launch date of Product B the 6th January 2010?
+function checkLaunchDate() {
+  var currentDate = new Date().toISOString().split("T")[0];
+
+  // Compare the dates and return the result
+  return currentDate >= data.DataProvider.products.launchDate;
+}
+
+// Usage
+var result = checkLaunchDate();
 
 // 5. Write a JS expression that prints the effective date formatted in YYYY-MMM-DD format.
+let date = new Date();
+// const formattedDate = console.log(
+//   `${date.getFullYear()}-${date.toLocaleString("default", {
+//     month: "short",
+//   })}-${date.getDate()}`
+// );
 
 // 6. What is the JSON address in object notation that stores Robert Johnson’s email address?
+const robertJohnsonEmail = data.DataProvider.global.positions.find(
+  ({ profile }) => profile.name === "Robert Johnson"
+).profile.email;
 
 // 7. Write a JS expression that returns an array of all unique email domains of the position holders.
+const uniqueEmailDomains = new Set();
 
+for (const position of data.DataProvider.global.positions) {
+  const emailDomain = position.profile.email.split("@")[1];
+  uniqueEmailDomains.add(emailDomain);
+}
+
+// Convert the Set to an array using the spread operator
+const uniqueDomainsArray = [...uniqueEmailDomains];
 // 8. Write a JS expression that returns an array of objects containing the names and email addresses of all DIRECTORS.
-
+let directorsArray = data.DataProvider.global.positions
+  .filter((position) => position.type === "DIRECTOR")
+  .map((profile) => profile.profile.email && profile.profile.name);
 // 9. Write a JS function that takes an email domain as a parameter and returns an array of objects containing the names, email addresses, and corresponding _id of all position holders whose email addresses belong to the specified domain.
-
-// 10. Write a JavaScript function that returns an array of objects containing the names and email addresses of the top 3 shareholders with the highest number of shares. The function should only consider shareholders whose email addresses belong to the “example.com” domain.
+function getPositionHoldersByDomain(email) {
+  const filteredData = data.DataProvider.global.positions.filter(
+    (positionHolder) => {
+      const positionHolderEmailDomain =
+        positionHolder.profile.email.split("@")[1];
+      return positionHolderEmailDomain === email;
+    }
+  );
+  return filteredData.map((positionHolder) => {
+    const { name, email } = positionHolder.profile;
+    const _id = positionHolder._id;
+    return { _id, name, email };
+  });
+}
+const positionHolders = getPositionHoldersByDomain("example.com");
+// 10. Write a JavaScript function that returns an array of objects containing the names and email addresses
+// of the top 3 shareholders with the highest number of shares.
+// The function should only consider shareholders whose email addresses belong to the “example.com” domain.
 // To determine the top shareholders, consider the following criteria:
-// The number of shares held by each shareholder is stored in a separate array called “shareholdings”, you need to correlate this with the “global.positions” array.
-// The order of shareholders in the “global.positions” array corresponds to the order of their shareholdings in the “shareholdings” array.
+// The number of shares held by each shareholder is stored in a separate array called “shareholdings”,
+// you need to correlate this with the “global.positions” array.
+// The order of shareholders in the “global.positions” array corresponds to the order of their
+// shareholdings in the “shareholdings” array.
 // The length of the “shareholdings” array is equal to the number of shareholders.
+const getTopShareholders = () => {
+  const topShareholders = [];
 
+  // Filter shareholdings array by email domain and sort in descending order
+  const filteredShareholdings = data.DataProvider.global.positions.filter(
+    (position) => {
+      return (
+        position.profile.email.endsWith("@example.com") &&
+        position.type === "SHAREHOLDER"
+      );
+    }
+  );
+
+  const findIndex = (obj) => {
+    let index;
+    filteredShareholdings.map((item, i) => {
+      if (item._id === obj._id) index = i;
+    });
+    console.log(index);
+    return index;
+  };
+
+  const sorted = filteredShareholdings.sort((a, b) => {
+    return (
+      data.DataProvider.shareholdings[findIndex(b)] -
+      data.DataProvider.shareholdings[findIndex(a)]
+    );
+  });
+
+  // Get top 3 shareholders with highest number of shares
+  for (let i = 0; i < Math.min(sorted.length, 3); i++) {
+    const shareholder = sorted[i];
+    topShareholders.push({
+      name: shareholder.profile.name,
+      email: shareholder.profile.email,
+    });
+  }
+
+  return topShareholders;
+};
+console.log(getTopShareholders());
 // Data.json contents:
